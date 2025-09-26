@@ -36,8 +36,8 @@ function calculateReturns(
 
 export async function GET(req: Request, context: Params) {
   try {
-    // FIX: params ko await karo
-    const { code } = await context.params;
+    // FIX: params ko direct access karo
+    const code = context.params.code;
 
     const url = new URL(req.url);
     const period = url.searchParams.get("period");
@@ -45,6 +45,9 @@ export async function GET(req: Request, context: Params) {
     const to = url.searchParams.get("to");
 
     const scheme = await getScheme(code);
+    if (!scheme || !scheme.data || scheme.data.length === 0) {
+      throw new Error("Scheme data not found");
+    }
     const navHistory = scheme.data.map((d: any) => ({
       date: d.date,
       nav: parseFloat(d.nav),
@@ -57,28 +60,36 @@ export async function GET(req: Request, context: Params) {
       switch (period) {
         case "1m":
           startDate = new Date(
-            latest.setMonth(latest.getMonth() - 1)
+            latest.getFullYear(),
+            latest.getMonth() - 1,
+            latest.getDate()
           )
             .toISOString()
             .split("T")[0];
           break;
         case "3m":
           startDate = new Date(
-            latest.setMonth(latest.getMonth() - 3)
+            latest.getFullYear(),
+            latest.getMonth() - 3,
+            latest.getDate()
           )
             .toISOString()
             .split("T")[0];
           break;
         case "6m":
           startDate = new Date(
-            latest.setMonth(latest.getMonth() - 6)
+            latest.getFullYear(),
+            latest.getMonth() - 6,
+            latest.getDate()
           )
             .toISOString()
             .split("T")[0];
           break;
         case "1y":
           startDate = new Date(
-            latest.setFullYear(latest.getFullYear() - 1)
+            latest.getFullYear() - 1,
+            latest.getMonth(),
+            latest.getDate()
           )
             .toISOString()
             .split("T")[0];
